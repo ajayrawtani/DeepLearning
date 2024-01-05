@@ -1,0 +1,69 @@
+import os
+from OpenAIKey import oak #please enter your own key to test file
+import streamlit as st
+import pickle
+import time
+from langchain import OpenAI
+from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.document_loaders import UnstructuredURLLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.document_loaders import Docx2txtLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.document_loaders import DirectoryLoader
+from langchain.document_loaders import UnstructuredWordDocumentLoader
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationSummaryBufferMemory
+
+# Loading API Key (Need to set this to environment)
+os.environ['OPENAI_API_KEY'] = oak #please enter your own key to test file
+
+#Stream Lit
+st.title("IT Help-Center AI - 📞🤖")
+
+st.sidebar.title('The bot has been trained questions pertaining to \n1) Password Reset\n2) Add and update device on Duo\n3) Configuring Outlook for MAC\n4) Configuring Outlook for Windows\n5) Configuring Outlook for Android\n6) Lockdown Browser\n7) Connecting Streaming Devices\n8) MAC Address\n9) Request loaner laptop\n10) VPN Update')
+
+main_placeholder = st.empty()
+
+#load multiple documents from specified folder
+## Below Libraries loaded above, leaving it here for later reference
+# from langchain.document_loaders import DirectoryLoader
+# from langchain.document_loaders import UnstructuredWordDocumentLoader
+
+main_placeholder.text("Reading Files ✅☑️☑️")
+
+# folder_path="C:/Users/up2sk/PycharmProjects/pythonProject1/LLM/TheBot/Docsmod"
+    
+file_path = "faiss_store_new_mod.pkl"
+
+main_placeholder.text("Setting Up LLM ✅✅☑️")
+llm = OpenAI(temperature = 0.5, max_tokens = 1000)
+
+# Add your text box at the bottom
+text_box_placeholder = st.empty()
+query = text_box_placeholder.chat_input("What is your Question❓:")
+
+main_placeholder.text("AI'm On-Line 📶👍! ✅✅✅")
+
+if query:
+    main_placeholder.text("Reading Vector Database 📖")
+    if os.path.exists(file_path):
+        with open(file_path,"rb") as f:
+            vectorIndex = pickle.load(f)
+            
+        main_placeholder.text("Answering Question 📖")
+        main_placeholder.text(query)
+        chain = RetrievalQAWithSourcesChain.from_llm(llm=llm, retriever=vectorIndex.as_retriever())
+        result = chain({'question':query + "Answer step-by-step as bullet points. Also under another subheading called 'Notes' please answer best practices in step-by-step as bullet points."}, return_only_outputs=True)
+        
+        st.header("Answer:\n")
+        formatted_answer = result['answer'].replace("•", "\n•")
+        st.write(formatted_answer)
+        sources = result.get("sources","")
+        if sources:
+            st.subheader("Sources: ")
+            sources_list = sources.split("\n")
+            for source in sources_list:
+                st.write(source)
