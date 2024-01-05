@@ -1,0 +1,58 @@
+import os
+from OpenAIKey import oak # Please load your own OpenAI Key to test
+import streamlit as st
+import pickle
+import time
+from langchain import OpenAI
+from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.document_loaders import UnstructuredURLLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.document_loaders import Docx2txtLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.document_loaders import DirectoryLoader
+from langchain.document_loaders import UnstructuredWordDocumentLoader
+
+# Loading API Key (Need to set this to environment)
+os.environ['OPENAI_API_KEY'] = oak # Please load your own OpenAI Key to test
+
+#Stream Lit
+st.title("IT Help-Center AI - 📞🤖")
+
+st.sidebar.title('The bot has been trained questions pertaining to \n1) Password Reset\n2) Add and update device on Duo\n3) Configuring Outlook for MAC\n4) Configuring Outlook for Windows\n5) Configuring Outlook for Android\n6) Lockdown Browser\n7) Connecting Streaming Devices\n8) MAC Address\n9) Request loaner laptop\n10) VPN Update')
+
+main_placeholder = st.empty()
+
+#load multiple documents from specified folder
+
+main_placeholder.text("Reading Files ✅☑️☑️☑️")
+
+folder_path="C:/Users/up2sk/PycharmProjects/pythonProject1/LLM/TheBot/LatestDocs"
+txt_loader = DirectoryLoader(folder_path, glob="*.docx", loader_cls=UnstructuredWordDocumentLoader)
+data = txt_loader.load()
+    
+file_path = "faiss_store_new_mod.pkl"
+
+llm = OpenAI(temperature = 0.3, max_tokens = 500)
+
+
+main_placeholder.text("Splitting Document ✅✅☑️☑️")
+
+text_splitter = RecursiveCharacterTextSplitter(
+chunk_size = 700,
+chunk_overlap = 100
+)
+
+docs = text_splitter.split_documents(data)
+
+main_placeholder.text("Embedding Vectors Started ✅✅✅☑️")
+embeddings = OpenAIEmbeddings()
+vectorstore_openai = FAISS.from_documents(docs, embeddings)
+time.sleep(2)
+    
+with open(file_path,"wb") as f:
+    pickle.dump(vectorstore_openai,f)
+
+main_placeholder.text("⚠️ AI'm Ready! ✅✅✅✅")
